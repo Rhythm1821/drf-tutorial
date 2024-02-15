@@ -1,13 +1,15 @@
 from django.shortcuts import render
 from django.http import JsonResponse,HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from snippets.models import Snippet
 from snippets.serializers import SnippetSerializer
 
 # Create your views here.
-@csrf_exempt
-def snippet_list(request):
+@api_view(['GET','POST'])
+def snippet_list(request, format=None):
     """
     List all code snippets or create a new snippet
     """
@@ -16,14 +18,14 @@ def snippet_list(request):
         serializer = SnippetSerializer(snippets,many=True)
         return JsonResponse(serializer.data,safe=False)
     elif request.method == 'POST':
-        data = JSONParser().parse(request)
-        serializer = SnippetSerializer(data=data)
+        serializer = SnippetSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse(serializer.data,status=201)
-        return JsonResponse(serializer.errors,status=400)
-    
-def snippet_detail(request,pk):
+            return Response(serializer.data,status=201)
+        return Response(serializer.errors,status=400)
+
+@api_view(['GET','PUT','DELETE'])
+def snippet_detail(request,pk, format=None):
     """
     Retrieve, update or delete a code snippet.
     """
@@ -34,15 +36,15 @@ def snippet_detail(request,pk):
     
     if request.method=='GET':
         serializer = SnippetSerializer(snippet)
-        return JsonResponse(serializer.data)
+        return Response(serializer.data)
     
-    elif request.method=='POST':
-        data = JSONParser().parse(request)
-        serializer = SnippetSerializer(snippet,data=data)
+    elif request.method=='PUT':
+        serializer = SnippetSerializer(snippet,data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse(serializer.data)
-        return JsonResponse(serializer.errors,status=404)
+            return Response(serializer.data)
+        return Response(serializer.errors,status=404)
+    
     elif request.method=='DELETE':
         snippet.delete()
         return HttpResponse(status=204)
