@@ -8,7 +8,7 @@ from snippets.models import Snippet
 from snippets.serializers import SnippetSerializer
 
 # class based views using generics
-class SnippetList(generics.ListAPIView):
+class SnippetList(generics.ListCreateAPIView):
     queryset = Snippet.objects.all()
     serializer_class = SnippetSerializer
 
